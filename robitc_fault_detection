@@ -1,0 +1,112 @@
+
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+import warnings
+warnings.filterwarnings('ignore')
+import xgboost as xgb
+from sklearn.ensemble import AdaBoostClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix, classification_report
+
+multi_data = pd.read_csv('classData.csv')
+
+multi_data
+
+multi_data.info()
+
+sns.heatmap(multi_data.corr(), annot=True, cmap='Blues')
+plt.show()
+
+multi_data['faultType'] = multi_data['G'].astype(str) + multi_data['C'].astype(str) + multi_data['B'].astype(str) + multi_data['A'].astype(str)
+multi_data.head()
+
+
+plt.pie(multi_data['faultType'].value_counts(), autopct='%1.1f%%',labels=['No Fault', 'LLG Fault', 'LLLG Fault', 'LG Fault', 'LLL Fault', 'LL Fault'])
+plt.show()
+
+
+multi_data
+
+x=multi_data.iloc[:,4:10]
+
+x
+y=multi_data.iloc[:,-1]
+
+y
+
+#Label encoder
+from sklearn.preprocessing import LabelEncoder
+le=LabelEncoder()
+y=le.fit_transform(y)
+y
+X_train,X_test,y_train,y_test=train_test_split(x,y,test_size=0.20,random_state=0)
+
+
+# # KNeighborsClassifier
+
+from sklearn.neighbors import KNeighborsClassifier
+knn_classifier = KNeighborsClassifier(n_neighbors=15)
+
+# Train the classifier on the training data
+knn_classifier.fit(X_train, y_train)
+
+# Make predictions on the test data
+y_pred = knn_classifier.predict(X_test)
+
+# Evaluate the model
+accuracy = accuracy_score(y_test, y_pred)
+print("Accuracy:", accuracy)
+
+print("Classification Report:")
+print(classification_report(y_test, y_pred))
+
+print("Confusion Matrix:")
+print(confusion_matrix(y_test, y_pred))
+
+
+# # XGBoost
+
+# XGBoost
+xgb_model = xgb.XGBClassifier(max_depth=20,random_state=24)
+xgb_model.fit(X_train, y_train)
+y_pred_xgb = xgb_model.predict(X_test)
+xgb_accuracy = accuracy_score(y_test, y_pred_xgb)
+print("XGBoost Accuracy:", xgb_accuracy)
+
+
+labels=['No Fault', 'LLG Fault', 'LLLG Fault', 'LG Fault', 'LLL Fault', 'LL Fault']
+sns.heatmap(confusion_matrix(y_test, y_pred_xgb), annot=True, cmap='Blues', fmt='.4g',xticklabels=labels,yticklabels=labels)
+plt.xlabel("Predicted Labels")
+plt.ylabel("True Labels")
+plt.title("xgb.XGBClassifier_Confusion Matrix")
+plt.show()
+plt.show()
+
+print(f"Classification Report:\n{classification_report(y_test,y_pred_xgb,target_names=labels)}")
+
+#dataset = pd.read_csv(filename)
+A='No Fault'
+B='LLG Fault'
+C='LLLG Fault'
+D='LG Fault'
+E='LLL Fault'
+F='LL Fault'
+predict = xgb_model.predict(X_test.iloc[1:20,:])
+for i in range(len(predict)):
+    if predict[i] == 0:
+        print("{} :{} ".format(multi_data.iloc[i,:],A))
+    elif predict[i]== 1:
+        print("{} :{} ".format(multi_data.iloc[i, :],B))
+    elif predict[i]== 2:
+        print("{} :{} ".format(multi_data.iloc[i, :],C))
+    elif predict[i]==3:
+        print("{} :{} ".format(multi_data.iloc[i, :],D))
+    elif predict[i]== 4:
+        print("{} :{} ".format(multi_data.iloc[i, :],E))
+    else:
+        print("{} :{} ".format(multi_data.iloc[i,:],F))
